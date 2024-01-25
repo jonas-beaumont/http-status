@@ -3,9 +3,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: http-status-deployment
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     name: http-status
-    chart: http-status
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicas  | default 1 }}
   strategy:
@@ -18,8 +20,9 @@ spec:
   template:
     metadata:
       labels:
-        name: http-status
-        chart: http-status
+        name: http-status-config-yaml
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: {{ .Release.Name }}
     spec:
       volumes:
         - name: http-status-nginx-conf
