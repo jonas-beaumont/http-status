@@ -1,5 +1,5 @@
 dockerImage: jonasbeaumont/http-status
-dockerImageTag: stable
+dockerImageTag: 2024.01.25
 config:
   sites:
     - url: "https://www.example.com"
