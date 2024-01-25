@@ -57,7 +57,7 @@ docker run -d -p 8000:8000 http-status
 
 ## Running the client on Kubernetes
 
-All the nessersary resources are installed using the helm chart. The `config.yaml` is not required when running the client in kubernetes because it sites list needs to be in the `values.yaml` file.
+The minimum kubernetes resources are installed using the helm chart. The `config.yaml` is not required when running the client in kubernetes because the sites list resides in the `values.yaml` file.
 
 *Example*
 
