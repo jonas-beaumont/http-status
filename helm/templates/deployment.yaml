@@ -1,0 +1,79 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-status-deployment
+  labels:
+    name: http-status
+    chart: http-status
+spec:
+  replicas: {{ .Values.replicas  | default 1 }}
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: http-status
+  template:
+    metadata:
+      labels:
+        name: http-status
+        chart: http-status
+    spec:
+      volumes:
+        - name: http-status-nginx-conf
+          configMap:
+            name: http-status-nginx-conf
+        - name: http-status-config-yaml
+          configMap:
+            name: http-status-config-yaml
+      containers:
+        - name: nginx
+          image: nginx:1.25.3
+          resources:
+            requests:
+              memory: {{ .Values.nginxMemoryRequests | default "64Mi" | quote }}
+            limits:
+              memory: {{ .Values.nginxStatusMemoryLimits | default "64Mi" | quote }}
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health_nginx
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health_nginx
+              port: 80
+            failureThreshold: 3
+          periodSeconds: 10
+          volumeMounts:
+          - name: http-status-nginx-conf
+            mountPath:
+              /etc/nginx/conf.d/
+        - name: http-status
+          image: {{ .Values.dockerImage }}:{{ .Values.dockerImageTag }}
+          resources:
+            requests:
+              memory: {{ .Values.httpStatusMemoryRequests | default "64Mi" | quote }}
+            limits:
+              memory: {{ .Values.httpStatusMemoryLimits | default "64Mi" | quote }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            failureThreshold: 3
+            periodSeconds: 10
+          volumeMounts:
+          - name: http-status-config-yaml
+            mountPath: /usr/src/app/config.yaml
+            subPath: config.yaml

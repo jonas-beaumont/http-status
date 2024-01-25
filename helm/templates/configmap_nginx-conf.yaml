@@ -1,0 +1,27 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: http-status-nginx-conf
+  labels:
+    name: http-status
+    chart: http-status
+data:
+  default.conf: |
+    limit_conn_zone $binary_remote_addr zone=limitconnbyaddr:20m;
+    limit_conn_status 429;
+    server {
+        listen 80;
+        listen [::]:80;
+
+        limit_conn   limitconnbyaddr {{ .Values.nginxConnectionLimit | default 100 }};
+
+        location / {
+            proxy_pass http://0.0.0.0:8000;
+        }
+        location = /health_nginx {
+                access_log off;
+                add_header 'Content-Type' 'application/json';
+                return 200 '{"status":"UP"}';
+        }
+    }

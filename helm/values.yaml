@@ -1,0 +1,8 @@
+dockerImage: jonasbeaumont/http-status
+dockerImageTag: stable
+config:
+  sites:
+    - url: "https://www.example.com"
+      name: "Example"
+      check_ssl: True
+      search_string: "example"
