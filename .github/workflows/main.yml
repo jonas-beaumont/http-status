@@ -22,7 +22,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Get the current date and time
-        run: echo "BUILD_DATE=$(date +'%Y%m%d%H%M')" >> $GITHUB_ENV
+        run: echo "BUILD_DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v2
