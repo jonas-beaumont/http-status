@@ -52,7 +52,7 @@ docker build -t http-status .
 ```
 
 ```
-docker run -d -p 8000:8080 http-status
+docker run -d -p 8000:8000 http-status
 ```
 
 ## Running the client on Kubernetes
