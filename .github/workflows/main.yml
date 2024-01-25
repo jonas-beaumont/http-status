@@ -30,4 +30,4 @@ jobs:
           context: .
           file: ./dockerfile
           push: true
-          tags: y${{ secrets.DOCKERHUB_REPO }}:${{ env.BUILD_DATE }}
+          tags: ${{ secrets.DOCKERHUB_REPO }}:${{ env.BUILD_DATE }}
