@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: http-status-deployment
+  name: http-status
   namespace: {{ .Release.Namespace | quote }}
   labels:
     name: http-status
@@ -20,9 +20,8 @@ spec:
   template:
     metadata:
       labels:
-        name: http-status-config-yaml
+        name: http-status
         chart: {{ .Chart.Name | quote }}
-        release: {{ .Release.Name }}
     spec:
       volumes:
         - name: http-status-nginx-conf
