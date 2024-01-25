@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     name: http-status
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    chart: {{ .Chart.Name | quote }}
     release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicas  | default 1 }}
@@ -21,7 +21,7 @@ spec:
     metadata:
       labels:
         name: http-status-config-yaml
-        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        chart: {{ .Chart.Name | quote }}
         release: {{ .Release.Name }}
     spec:
       volumes:
