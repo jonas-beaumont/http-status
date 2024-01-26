@@ -155,3 +155,107 @@ ssl_certificate_valid{name="demo",url="https://demo.example.com"} 1.0
 ssl_certificate_expiry_days{name="ci",url="https://ci.example.com"} 369.0
 ssl_certificate_expiry_days{name="demo",url="https://demo.example.com"} 369.0
 ```
+
+## Example prometheus config
+
+### Scrape Configs
+
+```
+- job_name: "http-status"
+  scrape_interval: 30s
+  static_configs:
+    - targets: [http-status]
+```
+
+### Prometheus rules
+
+
+```
+- name: http-status
+  rules:
+    ##############################################################################################
+    # Check if the status code has changed in 5 minutes
+    ##############################################################################################
+    - alert: HTTPStatusCodeChange
+    expr: changes(http_response_status_code[5m]) > 0
+    for: 5m
+    labels:
+        severity: warning
+    annotations:
+        summary: "HTTP status code change detected"
+        description: "HTTP status code for {{ $labels.url }} has changed in the last 5 minutes"
+
+    ##############################################################################################
+    # Check if string is not found
+    # The check applies only to app1 and app2. If 
+    ##############################################################################################
+    - alert: HTTPResponseStringMatchFalse
+    expr: http_response_string_match{name=~"app1|app2"} != 1
+    for: 5m
+    labels:
+        severity: warning
+    annotations:
+        summary: "HTTP body string match false"
+        description: "HTTP body for {{ $labels.url }} does not contain {{ $labels.search_string }}"
+
+    ##############################################################################################
+    # Check if string is found
+    # The check excludes app1 and app2
+    ##############################################################################################
+    - alert: HTTPResponseStringMatchTrue
+    expr: http_response_string_match{name!~"app1|app2"} != 0
+    for: 5m
+    labels:
+        severity: warning
+    annotations:
+        summary: "HTTP body string match true"
+        description: "HTTP body for {{ $labels.url }} does contain {{ $labels.search_string }}"
+
+    ##############################################################################################
+    # Check if the SSL certificate is valid
+    ##############################################################################################
+    - alert: SSLCertificateNotValid
+    expr: ssl_certificate_valid{} != 1
+    for: 5m
+    labels:
+        severity: warning
+    annotations:
+        summary: "Invalid SSL certificate detected"
+        description: "SSL certificate for {{ $labels.url }} is invalid"
+
+    ##############################################################################################
+    # Check if SSL certificate is due to expire in the next 61 to 90 days
+    ##############################################################################################
+    - alert: SSLCertificateExpiryDays90
+    expr: ssl_certificate_expiry_days{} <= 90 and ssl_certificate_expiry_days{} > 60
+    for: 5m
+    labels:
+        severity: info
+    annotations:
+        summary: "SSL certificate expirying"
+        description: "SSL certificate for {{ $labels.url }} expirying in less than 90 days"
+
+    ##############################################################################################
+    # Check if SSL certificate is due to expire in the next 31 to 60 days
+    ##############################################################################################
+    - alert: SSLCertificateExpiryDays60
+    expr: ssl_certificate_expiry_days{} <= 60 and ssl_certificate_expiry_days{} > 30
+    for: 5m
+    labels:
+        severity: warning
+    annotations:
+        summary: "SSL certificate expirying"
+        description: "SSL certificate for {{ $labels.url }} expirying in less than 60 days"
+
+    ##############################################################################################
+    # Check if SSL certificate is due to expire in the next 30 days
+    ##############################################################################################
+    - alert: SSLCertificateExpiryDays30
+    expr: ssl_certificate_expiry_days{} <= 30
+    for: 5m
+    labels:
+        severity: critical
+    annotations:
+        summary: "SSL certificate expirying"
+        description: "SSL certificate for {{ $labels.url }} expirying in less than 30 days"
+```
