@@ -51,7 +51,7 @@ spec:
               path: /health_nginx
               port: 80
             failureThreshold: 3
-          periodSeconds: 10
+            periodSeconds: 10
           volumeMounts:
           - name: http-status-nginx-conf
             mountPath:
