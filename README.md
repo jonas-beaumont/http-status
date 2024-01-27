@@ -1,6 +1,6 @@
 # HTTP-STATUS
 
-This Python script is a prometheus_client monitoring tool designed to periodically check and report on the health and performance of specified HTTP endpoints. It measures HTTP request latencies, tracks response status codes, verifies SSL certificate validity and expiration, and optionally checks for specific strings in response bodies. 
+HTTP-STATUS is a Python script that checks HTTP endpoint health. It checks HTTP the latency, status codes, and optionally checks for a strings in the response bodies, SSL certificate validity and expiration. The metrics are published using the promtheus_client ready to be scraped by Prometheus.
 
 ## Getting started
 
