@@ -10,11 +10,17 @@ from prometheus_client import Counter, Gauge, start_http_server
 import requests
 import yaml
 
+# Get log level from environment variable
+log_level_name = os.getenv("LOG_LEVEL", "ERROR")  # Default to 'ERROR' if not set
+
+# Convert the log level name to a logging level
+log_level = getattr(logging, log_level_name.upper(), logging.ERROR)
+
 
 # Setup logging to a file with INFO level and a specific format
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.ERROR,
+    level=log_level,
     format="%(asctime)s %(levelname)s:%(message)s",
 )
 
@@ -74,6 +80,9 @@ def check_url(url, name, check_ssl=False, search_string=None):
             response.elapsed.total_seconds()
         )
 
+        logging.info(f"{name} url: {url}")
+        logging.info(f"{name} status_code: {response.status_code}")
+
         # Increment the counter for the received status code
         http_status_counter.labels(
             url=url, name=name, status_code=response.status_code
@@ -88,6 +97,8 @@ def check_url(url, name, check_ssl=False, search_string=None):
             string_match_gauge.labels(
                 url=url, name=name, search_string=search_string
             ).set(1 if match_found else 0)
+
+            logging.info(f"{name} body: {response.text}")
 
         # Check SSL certificate if required and the URL is HTTPS
         if check_ssl and url.startswith("https://"):
