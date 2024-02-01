@@ -4,7 +4,7 @@ HTTP-STATUS is a Python script that checks HTTP endpoint health. It checks HTTP 
 
 ## Getting started
 
-The client requires a `config.yaml` file in the `app` dir. The file is a list of sites you wish to monitor.
+The client requires a `config.yaml` file in the `app` dir. The file contains a list of sites you wish to monitor and the region HTTP-STATUS is deployed to.
 
 | Key            | Description                          | Required | Example                      |
 |----------------|--------------------------------------|----------|------------------------------|
@@ -17,6 +17,8 @@ The client requires a `config.yaml` file in the `app` dir. The file is a list of
 *Example*
 
 ```
+
+region: London # optional, default to London
 sites:
   - url: "https://www.example.com"
     name: "example"

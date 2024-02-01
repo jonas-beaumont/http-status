@@ -29,7 +29,7 @@ logging.basicConfig(
 http_requests_gauge = Gauge(
     "http_request_duration_seconds",
     "HTTP request latency in seconds",
-    ["url", "name"],
+    ["url", "region", "name"],
 )
 
 # Gauge for HTTP status code
@@ -37,14 +37,14 @@ http_requests_gauge = Gauge(
 http_status_gauge = Gauge(
     "http_response_status_code",
     "HTTP response status code",
-    ["url", "name"],
+    ["url", "region", "name"],
 )
 
 # Counter to track HTTP response status codes
 http_status_counter = Counter(
     "http_response_status_code_counter",
     "Count of HTTP response status codes",
-    ["url", "name", "status_code"],
+    ["url", "region", "name", "status_code"],
 )
 
 
@@ -52,31 +52,34 @@ http_status_counter = Counter(
 string_match_gauge = Gauge(
     "http_response_string_match",
     "Indicates if a specific string is found in the HTTP response",
-    ["url", "name", "search_string"],
+    ["url", "region", "name", "search_string"],
 )
 
 # Gauge for checking if the SSL certificate is valid
 ssl_valid_gauge = Gauge(
     "ssl_certificate_valid",
     "Indicates if the SSL certificate is valid (1) or not (0)",
-    ["url", "name"],
+    ["url", "region", "name"],
 )
 
 # Gauge for counting the number of days until SSL certificate expiration
 ssl_expiry_gauge = Gauge(
     "ssl_certificate_expiry_days",
     "Number of days until the SSL certificate expires",
-    ["url", "name"],
+    ["url", "region", "name"],
 )
 
 
 # Function to perform various checks on a given URL
-def check_url(url, name, check_ssl=False, search_string=None):
+def check_url(
+    url, name, check_ssl=False, search_string=None, http_status_region="London"
+):
     try:
+        http_status_region
         # Perform an HTTP get request
         response = requests.get(url, timeout=10, allow_redirects=False)
         # Update HTTP request latency gauge
-        http_requests_gauge.labels(url=url, name=name).set(
+        http_requests_gauge.labels(url=url, region=http_status_region, name=name).set(
             response.elapsed.total_seconds()
         )
 
@@ -85,17 +88,25 @@ def check_url(url, name, check_ssl=False, search_string=None):
 
         # Increment the counter for the received status code
         http_status_counter.labels(
-            url=url, name=name, status_code=response.status_code
+            url=url,
+            region=http_status_region,
+            name=name,
+            status_code=response.status_code,
         ).inc()
 
         # Set the HTTP status code gauge
-        http_status_gauge.labels(url=url, name=name).set(response.status_code)
+        http_status_gauge.labels(url=url, region=http_status_region, name=name).set(
+            response.status_code
+        )
 
         # If a search string is provided, check for its presence in the response
         if search_string:
             match_found = search_string in response.text
             string_match_gauge.labels(
-                url=url, name=name, search_string=search_string
+                url=url,
+                region=http_status_region,
+                name=name,
+                search_string=search_string,
             ).set(1 if match_found else 0)
 
             logging.info(f"{name} body: {response.text}")
@@ -103,8 +114,12 @@ def check_url(url, name, check_ssl=False, search_string=None):
         # Check SSL certificate if required and the URL is HTTPS
         if check_ssl and url.startswith("https://"):
             ssl_valid, days_until_expiry = check_ssl_certificate(url)
-            ssl_valid_gauge.labels(url=url, name=name).set(1 if ssl_valid else 0)
-            ssl_expiry_gauge.labels(url=url, name=name).set(days_until_expiry)
+            ssl_valid_gauge.labels(url=url, region=http_status_region, name=name).set(
+                1 if ssl_valid else 0
+            )
+            ssl_expiry_gauge.labels(url=url, region=http_status_region, name=name).set(
+                days_until_expiry
+            )
 
         return
 
@@ -125,9 +140,11 @@ def check_url(url, name, check_ssl=False, search_string=None):
         logging.error(f"General error occurred while fetching {url}: {e}")
         # Handle other request exceptions here
     # Set gauges to a default error value in case of an exception
-    http_requests_gauge.labels(url=url, name=name).set(-1)
-    http_status_counter.labels(url=url, name=name, status_code="error").inc()
-    http_status_gauge.labels(url=url, name=name).set(-1)
+    http_requests_gauge.labels(url=url, region=http_status_region, name=name).set(-1)
+    http_status_counter.labels(
+        url=url, region=http_status_region, name=name, status_code="error"
+    ).inc()
+    http_status_gauge.labels(url=url, region=http_status_region, name=name).set(-1)
 
 
 # Function to check the SSL certificate of a URL
@@ -176,7 +193,8 @@ if __name__ == "__main__":
     # Extract the 'urls_to_monitor' list from the loaded configuration
     urls_to_monitor = config["sites"]
 
-    # Define the list of URLs to monitor along with their settings
+    # Extract the 'region' loaded configuration
+    http_status_region = config.get("region", "London")
 
     # Main loop to continuously check the URLs
     while True:
@@ -201,6 +219,7 @@ if __name__ == "__main__":
                 site.get(
                     "search_string", None
                 ),  # Get 'search_string', default to None if not present
+                http_status_region,
             )
         # Wait for 60 seconds before the next iteration of the loop
         time.sleep(config.get("sleep", 60))
