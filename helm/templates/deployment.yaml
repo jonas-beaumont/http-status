@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: http-status
+  name: {{ .Release.Name | default "http-status" | lower | quote }}
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    name: http-status
+    name: {{ .Release.Name | default "http-status" | lower | quote }}
     chart: {{ .Chart.Name | quote }}
     release: {{ .Release.Name }}
 spec:
@@ -16,22 +16,22 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      name: http-status
+      name: {{ .Release.Name | default "http-status" | lower | quote }}
   template:
     metadata:
       labels:
-        name: http-status
+        name: {{ .Release.Name | default "http-status" | lower | quote }}
         chart: {{ .Chart.Name | quote }}
     spec:
       volumes:
-        - name: http-status-nginx-conf
+        - name: {{ .Release.Name | default "http-status" | lower }}-nginx-conf
           configMap:
-            name: http-status-nginx-conf
-        - name: http-status-config-yaml
+            name: {{ .Release.Name | default "http-status" | lower }}-nginx-conf
+        - name: {{ .Release.Name | default "http-status" | lower }}-config-yaml
           configMap:
-            name: http-status-config-yaml
+            name: {{ .Release.Name | default "http-status" | lower }}-config-yaml
       containers:
-        - name: http-status
+        - name: {{ .Release.Name | default "http-status" | lower | quote }}
           image: {{ .Values.dockerImage }}:{{ .Values.dockerImageTag }}
           env:
             - name: LOG_LEVEL
@@ -54,7 +54,7 @@ spec:
             failureThreshold: 3
             periodSeconds: 10
           volumeMounts:
-          - name: http-status-config-yaml
+          - name: {{ .Release.Name | default "http-status" | lower }}-config-yaml
             mountPath: /usr/src/app/config.yaml
             subPath: config.yaml
         - name: nginx
@@ -79,6 +79,6 @@ spec:
             failureThreshold: 3
             periodSeconds: 10
           volumeMounts:
-          - name: http-status-nginx-conf
+          - name: {{ .Release.Name | default "http-status" | lower }}-nginx-conf
             mountPath:
               /etc/nginx/conf.d/

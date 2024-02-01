@@ -1,5 +1,5 @@
 apiVersion: v2
-name: deployment
+name: http-status
 description: A Helm chart for deploying http-status
 
 # A chart can be either an 'application' or a 'library' chart.

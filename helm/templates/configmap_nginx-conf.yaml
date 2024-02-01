@@ -2,10 +2,10 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: http-status-nginx-conf
+  name: {{ .Release.Name | default "http-status" | lower }}-nginx-conf
   namespace: {{ .Release.Namespace | quote }}
   labels:
-    name: http-status-config-yaml
+    name: {{ .Release.Name | default "http-status" | lower }}-config-yaml
     chart: {{ .Chart.Name | quote }}
     release: {{ .Release.Name }}
 data:
